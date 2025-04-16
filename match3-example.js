@@ -35,8 +35,8 @@ window.onload = function() {
     
     // Level object
     var level = {
-        x: 250,         // X position
-        y: 113,         // Y position
+        x: 0,         // X position
+        y: 0,         // Y position
         columns: 8,     // Number of tile columns
         rows: 8,        // Number of tile rows
         tilewidth: 40,  // Visual width of a tile
@@ -44,6 +44,8 @@ window.onload = function() {
         tiles: [],      // The two-dimensional tile array
         selectedtile: { selected: false, column: 0, row: 0 }
     };
+    canvas.width = level.columns * level.tilewidth;
+    canvas.height = level.rows * level.tileheight;
     
     // All of the different tile colors in RGB
     var tilecolors = [[255, 128, 128],
@@ -76,17 +78,12 @@ window.onload = function() {
     // Show available moves
     var showmoves = false;
     
-    // The AI bot
-    var aibot = false;
-    
     // Game Over
     var gameover = false;
     
-    // Gui buttons
-    var buttons = [ { x: 30, y: 240, width: 150, height: 50, text: "New Game"},
-                    { x: 30, y: 300, width: 150, height: 50, text: "Show Moves"},
-                    { x: 30, y: 360, width: 150, height: 50, text: "Enable AI Bot"}];
-    
+    // Thêm biến mới để theo dõi lượt chơi
+    let isPlayerTurn = true; // true: lượt người chơi, false: lượt AI
+
     // Initialize the game
     function init() {
         // Add mouse events
@@ -136,9 +133,8 @@ window.onload = function() {
             if (moves.length <= 0) {
                 gameover = true;
             }
-            
-            // Let the AI bot make a move, if enabled
-            if (aibot) {
+            // Let the AI bot make a move on its turn
+            if (!isPlayerTurn) {
                 animationtime += dt;
                 if (animationtime > animationtimetotal) {
                     // Check if there are moves available
@@ -258,26 +254,11 @@ window.onload = function() {
         framecount++;
     }
     
-    // Draw text that is centered
-    function drawCenterText(text, x, y, width) {
-        var textdim = context.measureText(text);
-        context.fillText(text, x + (width-textdim.width)/2, y);
-    }
     
     // Render the game
     function render() {
         // Draw the frame
         drawFrame();
-        
-        // Draw score
-        context.fillStyle = "#000000";
-        context.font = "24px Verdana";
-        drawCenterText("Score:", 30, level.y+40, 150);
-        drawCenterText(score, 30, level.y+70, 150);
-        
-        // Draw buttons
-        drawButtons();
-        
         // Draw level background
         var levelwidth = level.columns * level.tilewidth;
         var levelheight = level.rows * level.tileheight;
@@ -313,35 +294,6 @@ window.onload = function() {
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.fillStyle = "#e8eaec";
         context.fillRect(1, 1, canvas.width-2, canvas.height-2);
-        
-        // Draw header
-        context.fillStyle = "#303030";
-        context.fillRect(0, 0, canvas.width, 65);
-        
-        // Draw title
-        context.fillStyle = "#ffffff";
-        context.font = "24px Verdana";
-        context.fillText("Match3 Example - Rembound.com", 10, 30);
-        
-        // Display fps
-        context.fillStyle = "#ffffff";
-        context.font = "12px Verdana";
-        context.fillText("Fps: " + fps, 13, 50);
-    }
-    
-    // Draw buttons
-    function drawButtons() {
-        for (var i=0; i<buttons.length; i++) {
-            // Draw button shape
-            context.fillStyle = "#000000";
-            context.fillRect(buttons[i].x, buttons[i].y, buttons[i].width, buttons[i].height);
-            
-            // Draw button text
-            context.fillStyle = "#ffffff";
-            context.font = "18px Verdana";
-            var textdim = context.measureText(buttons[i].text);
-            context.fillText(buttons[i].text, buttons[i].x + (buttons[i].width-textdim.width)/2, buttons[i].y+30);
-        }
     }
     
     // Render tiles
@@ -425,15 +377,6 @@ window.onload = function() {
             // Calculate the tile coordinates
             var coord = getTileCoordinate(clusters[i].column, clusters[i].row, 0, 0);
             
-            if (clusters[i].horizontal) {
-                // Draw a horizontal line
-                context.fillStyle = "#00ff00";
-                context.fillRect(coord.tilex + level.tilewidth/2, coord.tiley + level.tileheight/2 - 4, (clusters[i].length - 1) * level.tilewidth, 8);
-            } else {
-                // Draw a vertical line
-                context.fillStyle = "#0000ff";
-                context.fillRect(coord.tilex + level.tilewidth/2 - 4, coord.tiley + level.tileheight/2, 8, (clusters[i].length - 1) * level.tileheight);
-            }
         }
     }
     
@@ -463,6 +406,9 @@ window.onload = function() {
         
         // Reset game over
         gameover = false;
+        
+        // Reset turn to player
+        isPlayerTurn = true;
         
         // Create the level
         createLevel();
@@ -758,6 +704,7 @@ window.onload = function() {
         animationstate = 2;
         animationtime = 0;
         gamestate = gamestates.resolve;
+        isPlayerTurn = !isPlayerTurn
     }
     
     // On mouse movement
@@ -768,7 +715,7 @@ window.onload = function() {
         // Check if we are dragging with a tile selected
         if (drag && level.selectedtile.selected) {
             // Get the tile under the mouse
-            mt = getMouseTile(pos);
+            let mt = getMouseTile(pos);
             if (mt.valid) {
                 // Valid tile
                 
@@ -789,7 +736,7 @@ window.onload = function() {
         // Start dragging
         if (!drag) {
             // Get the tile under the mouse
-            mt = getMouseTile(pos);
+            let mt = getMouseTile(pos);
             
             if (mt.valid) {
                 // Valid tile
@@ -820,27 +767,6 @@ window.onload = function() {
 
             // Start dragging
             drag = true;
-        }
-        
-        // Check if a button was clicked
-        for (var i=0; i<buttons.length; i++) {
-            if (pos.x >= buttons[i].x && pos.x < buttons[i].x+buttons[i].width &&
-                pos.y >= buttons[i].y && pos.y < buttons[i].y+buttons[i].height) {
-                
-                // Button i was clicked
-                if (i == 0) {
-                    // New Game
-                    newGame();
-                } else if (i == 1) {
-                    // Show Moves
-                    showmoves = !showmoves;
-                    buttons[i].text = (showmoves?"Hide":"Show") + " Moves";
-                } else if (i == 2) {
-                    // AI Bot
-                    aibot = !aibot;
-                    buttons[i].text = (aibot?"Disable":"Enable") + " AI Bot";
-                }
-            }
         }
     }
     
