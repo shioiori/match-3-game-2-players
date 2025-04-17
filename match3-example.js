@@ -52,9 +52,7 @@ window.onload = function() {
                       [128, 255, 128],
                       [128, 128, 255],
                       [255, 255, 128],
-                      [255, 128, 255],
-                      [128, 255, 255],
-                      [255, 255, 255]];
+                      [255, 128, 255],];
     
     // Clusters and moves that were found
     var clusters = [];  // { column, row, length, horizontal }
@@ -82,6 +80,14 @@ window.onload = function() {
 
     var rowsInTurn = []
 
+    var pause = false
+
+    var types = ['sword', 'shield', 'hp', 'mana', 'burst']
+
+    function randomInt(min, max) { // min and max included 
+        return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+
     // Initialize the game
     function init() {
         // Add mouse events
@@ -95,7 +101,7 @@ window.onload = function() {
             level.tiles[i] = [];
             for (var j=0; j<level.rows; j++) {
                 // Define a tile type and a shift parameter for animation
-                level.tiles[i][j] = { type: 0, shift:0 }
+                level.tiles[i][j] = { type: randomInt(1, types.length), shift:0 }
             }
         }
         
@@ -118,6 +124,15 @@ window.onload = function() {
     
     // Update the game state
     function update(tframe) {
+        if (pause) {
+            // delay to custom function call with rows eaten
+            if (tframe - lastframe > 2000){
+                pause = false
+                document.getElementById('notification').style.display = 'none'
+            }
+            return
+        }
+
         var dt = (tframe - lastframe) / 1000;
         lastframe = tframe;
         
@@ -126,7 +141,33 @@ window.onload = function() {
         
         if (gamestate == gamestates.ready) {
             // Game is ready for player input
-            rowsInTurn = []
+            if (rowsInTurn.length > 0){
+                pause = true
+                const merged = Object.values(
+                    rowsInTurn.reduce((acc, curr) => {
+                      const { type } = curr;
+                      if (!acc[type]) {
+                        acc[type] = { ...curr }; 
+                      } else {
+                        acc[type].length += curr.length;
+                      }
+                      return acc;
+                    }, {})
+                );
+                merged.forEach(item => {
+                    let type = types[item.type]
+                    var span = document.getElementById(type)
+                    span.innerHTML = item.length
+
+                })
+                document.getElementById('notification').style.display = 'block'
+                rowsInTurn = []
+                return
+            }
+            types.forEach(item => {
+                var span = document.getElementById(item)
+                span.innerHTML = 0
+            })
             // Check for game over
             if (moves.length <= 0) {
                 createLevel()

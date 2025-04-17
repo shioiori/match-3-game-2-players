@@ -6,6 +6,35 @@
 <script type='text/javascript' src='match3-example.js'></script>
 </head>
 <body>
-<canvas id="viewport" width="640" height="480"></canvas>
+<div class="container">
+    <div class="point">
+        <p>Kiếm: <span id="sword">0</span>&nbsp;</p>
+        <p>Khiên: <span id="shield">0</span>&nbsp;</p>
+        <p>Máu: <span id="hp">0</span>&nbsp;</p>
+        <p>Mana: <span id="mana">0</span>&nbsp;</p>
+        <p>Nộ: <span id="burst">0</span>&nbsp;</p>
+    </div>
+    <div id="notification" style="display: none;">Đang hành động...</div>
+    <div>
+        <img src="assets/pet1.png">
+        <canvas id="viewport" width="640" height="480"></canvas>
+        <img src="assets/pet2.png">
+    </div>
+</div>
 </body>
 </html>
+
+<style>
+    img{
+        height: 480px;
+        width: auto;
+    }
+
+    .container{
+        text-align: center;
+    }
+
+    .point{
+        display: inline-flex;
+    }
+</style>
