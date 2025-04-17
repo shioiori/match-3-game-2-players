@@ -78,11 +78,9 @@ window.onload = function() {
     // Show available moves
     var showmoves = false;
     
-    // Game Over
-    var gameover = false;
-    
-    // Thêm biến mới để theo dõi lượt chơi
-    let isPlayerTurn = true; // true: lượt người chơi, false: lượt AI
+    var isPlayerTurn = true;
+
+    var rowsInTurn = []
 
     // Initialize the game
     function init() {
@@ -128,10 +126,11 @@ window.onload = function() {
         
         if (gamestate == gamestates.ready) {
             // Game is ready for player input
-            
+            rowsInTurn = []
             // Check for game over
             if (moves.length <= 0) {
-                gameover = true;
+                createLevel()
+                return
             }
             // Let the AI bot make a move on its turn
             if (!isPlayerTurn) {
@@ -162,8 +161,8 @@ window.onload = function() {
                 if (animationtime > animationtimetotal) {
                     // Find clusters
                     findClusters();
-                    
                     if (clusters.length > 0) {
+                        rowsInTurn = rowsInTurn.concat(clusters)
                         // Add points to the score
                         for (var i=0; i<clusters.length; i++) {
                             // Add extra points for longer clusters
@@ -216,6 +215,7 @@ window.onload = function() {
                         // Invalid swap, Rewind swapping animation
                         animationstate = 3;
                         animationtime = 0;
+                        isPlayerTurn = !isPlayerTurn
                     }
                     
                     // Update moves and clusters
@@ -501,7 +501,7 @@ window.onload = function() {
                     if (matchlength >= 3) {
                         // Found a horizontal cluster
                         clusters.push({ column: i+1-matchlength, row:j,
-                                        length: matchlength, horizontal: true });
+                                        length: matchlength, horizontal: true, type: level.tiles[i][j].type });
                     }
                     
                     matchlength = 1;
@@ -536,7 +536,7 @@ window.onload = function() {
                     if (matchlength >= 3) {
                         // Found a vertical cluster
                         clusters.push({ column: i, row:j+1-matchlength,
-                                        length: matchlength, horizontal: false });
+                                        length: matchlength, horizontal: false, type: level.tiles[i][j].type });
                     }
                     
                     matchlength = 1;
@@ -704,6 +704,7 @@ window.onload = function() {
         animationstate = 2;
         animationtime = 0;
         gamestate = gamestates.resolve;
+        console.log(isPlayerTurn)
         isPlayerTurn = !isPlayerTurn
     }
     
